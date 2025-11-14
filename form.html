@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Регистрация пользователей — Dark Theme</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f0f17;
+      --card-bg: #181824;
+      --accent: #6c63ff;
+      --accent-dark: #5750e3;
+      --danger: #ff5c5c;
+      --danger-dark: #d94747;
+      --text: #e5e6f0;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background: radial-gradient(circle at top, #1b1b29, #0f0f17);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      color: var(--text);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: var(--text);
+      font-size: 28px;
+      font-weight: 600;
+      text-shadow: 0 0 15px rgba(108, 99, 255, 0.3);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 850px;
+      background: var(--card-bg);
+      padding: 35px;
+      border-radius: var(--radius);
+      box-shadow: 0 8px 35px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.7s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    form {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    input {
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 2px solid #2a2a3d;
+      outline: none;
+      background: #13131d;
+      color: var(--text);
+      width: 30%;
+      min-width: 200px;
+      transition: 0.3s;
+      font-size: 15px;
+    }
+
+    input::placeholder {
+      color: #888;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(108, 99, 255, 0.6);
+    }
+
+    button {
+      padding: 14px 22px;
+      border: none;
+      border-radius: var(--radius);
+      background:#6A5ACD;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(108, 99, 255, 0.4);
+    }
+
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+      border-radius: var(--radius);
+      overflow: hidden;
+      color: var(--text);
+    }
+
+    th {
+      padding: 14px;
+      background: #242437;
+      color: var(--text);
+      text-align: left;
+      font-weight: 500;
+      border-bottom: 1px solid #2d2d41;
+    }
+
+    td {
+      padding: 12px;
+      background: #1a1a27;
+      border-bottom: 1px solid #262637;
+    }
+
+    tr:hover td {
+      background: #242437;
+      transition: 0.3s;
+    }
+
+    .export-btn {
+      background: #008000;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    .export-btn:hover {
+      background: #1e924f;
+      box-shadow: 0 6px 16px rgba(39,174,96,0.4);
+    }
+
+    .clear-btn {
+      background: #B22222;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .clear-btn:hover {
+      background: var(--danger-dark);
+      box-shadow: 0 6px 16px rgba(255,92,92,0.4);
+    }
+
+    @media (max-width: 600px) {
+      form { flex-direction: column; }
+      input, button { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Регистрация пользователей</h1>
+
+    <form id="userForm">
+      <input id="name" placeholder="Имя" required>
+      <input id="email" placeholder="Email" required>
+      <input id="age" type="number" placeholder="Возраст" required>
+      <button type="submit">Добавить</button>
+    </form>
+
+    <button class="export-btn" onclick="exportToExcel()">Экспортировать в Excel</button>
+    <button class="clear-btn" onclick="clearUsers()">Очистить список</button>
+
+    <table id="userTable">
+      <thead>
+        <tr><th>Имя</th><th>Email</th><th>Возраст</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('userForm');
+    const tableBody = document.querySelector('#userTable tbody');
+
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    render();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const user = {
+        name: name.value,
+        email: email.value,
+        age: age.value
+      };
+      users.push(user);
+      localStorage.setItem('users', JSON.stringify(users));
+      render();
+      form.reset();
+    });
+
+    function render() {
+      tableBody.innerHTML = '';
+      users.forEach(u => {
+        const row = `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.age}</td></tr>`;
+        tableBody.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    function exportToExcel() {
+      const wb = XLSX.utils.table_to_book(document.getElementById('userTable'));
+      XLSX.writeFile(wb, 'users.xlsx');
+    }
+
+    function clearUsers() {
+      if (confirm("Вы уверены, что хотите очистить весь список?")) {
+        users = [];
+        localStorage.removeItem('users');
+        render();
+      }
+    }
+  </script>
+</body>
+</html>  
